@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "ServiceRegistryApplication",
+      "request": "launch",
+      "mainClass": "com.ems.service_registry.ServiceRegistryApplication",
+      "projectName": "service-registry"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-EmployeeServiceApplication<employee-service>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.ems.employee_service.EmployeeServiceApplication",
+      "projectName": "employee-service",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}

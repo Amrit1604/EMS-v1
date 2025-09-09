@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            color: #f0f0f0;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            color: #666;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .api-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .api-endpoint {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .method {
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 10px;
+        }
+
+        .get { background-color: #28a745; }
+        .post { background-color: #007bff; }
+        .put { background-color: #ffc107; }
+        .delete { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏢 Employee Management System</h1>
+            <p class="subtitle">Comprehensive HR & Payroll Management Platform</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="card">
+                <h2>👥 Employee Management</h2>
+                <p>Complete CRUD operations for employee records including personal information, salary details, and employment status.</p>
+                <ul class="feature-list">
+                    <li>Add new employees</li>
+                    <li>Update employee information</li>
+                    <li>Search and filter employees</li>
+                    <li>Department-wise management</li>
+                    <li>Employee status tracking</li>
+                </ul>
+                <div class="actions">
+                    <button class="btn" onclick="testAPI('/api/employees', 'GET')">View All Employees</button>
+                    <button class="btn" onclick="showAddEmployee()">Add Employee</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💰 Payroll Management</h2>
+                <p>Automated payroll calculation, salary processing, and comprehensive payroll reports with approval workflows.</p>
+                <ul class="feature-list">
+                    <li>Automatic payroll generation</li>
+                    <li>Salary calculations with deductions</li>
+                    <li>Overtime calculations</li>
+                    <li>Payroll approval process</li>
+                    <li>Monthly/yearly reports</li>
+                </ul>
+                <div class="actions">
+                    <button class="btn" onclick="testAPI('/api/payrolls', 'GET')">View Payrolls</button>
+                    <button class="btn" onclick="generatePayroll()">Generate Payroll</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 Attendance Tracking</h2>
+                <p>Real-time attendance management with check-in/out functionality and comprehensive attendance reports.</p>
+                <ul class="feature-list">
+                    <li>Digital check-in/check-out</li>
+                    <li>Working hours calculation</li>
+                    <li>Overtime tracking</li>
+                    <li>Attendance reports</li>
+                    <li>Approval workflows</li>
+                </ul>
+                <div class="actions">
+                    <button class="btn" onclick="testAPI('/api/attendance', 'GET')">View Attendance</button>
+                    <button class="btn" onclick="checkIn()">Quick Check-in</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🏖️ Leave Management</h2>
+                <p>Complete leave application and approval system with balance tracking and various leave types.</p>
+                <ul class="feature-list">
+                    <li>Leave application system</li>
+                    <li>Multiple leave types</li>
+                    <li>Leave balance tracking</li>
+                    <li>Approval/rejection workflow</li>
+                    <li>Leave history</li>
+                </ul>
+                <div class="actions">
+                    <button class="btn" onclick="testAPI('/api/leaves', 'GET')">View Leaves</button>
+                    <button class="btn" onclick="applyLeave()">Apply Leave</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalEmployees">0</div>
+                <div class="stat-label">Total Employees</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayAttendance">0</div>
+                <div class="stat-label">Today's Attendance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingLeaves">0</div>
+                <div class="stat-label">Pending Leaves</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="monthlyPayrolls">0</div>
+                <div class="stat-label">Monthly Payrolls</div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>🔌 API Endpoints</h2>
+            <p>The system provides comprehensive REST APIs for all operations:</p>
+
+            <div style="margin-top: 20px;">
+                <h3>Employee APIs</h3>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>http://localhost:8080/api/employees - Get all employees
+                </div>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>http://localhost:8080/api/employees - Create new employee
+                </div>
+                <div class="api-endpoint">
+                    <span class="method put">PUT</span>http://localhost:8080/api/employees/{id} - Update employee
+                </div>
+                <div class="api-endpoint">
+                    <span class="method delete">DELETE</span>http://localhost:8080/api/employees/{id} - Delete employee
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3>Payroll APIs</h3>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>http://localhost:8080/api/payrolls - Get all payrolls
+                </div>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>http://localhost:8080/api/payrolls/generate?employeeId=EMP001&payPeriod=2024-12 - Generate payroll
+                </div>
+                <div class="api-endpoint">
+                    <span class="method put">PUT</span>http://localhost:8080/api/payrolls/{id}/approve?approvedBy=admin - Approve payroll
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3>Attendance APIs</h3>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>http://localhost:8080/api/attendance/checkin?employeeId=EMP001 - Check-in
+                </div>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>http://localhost:8080/api/attendance/checkout?employeeId=EMP001 - Check-out
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>http://localhost:8080/api/attendance/employee/{employeeId} - Get employee attendance
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3>Leave APIs</h3>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>http://localhost:8080/api/leaves/apply - Apply for leave
+                </div>
+                <div class="api-endpoint">
+                    <span class="method put">PUT</span>http://localhost:8080/api/leaves/{id}/approve?approvedBy=manager - Approve leave
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>http://localhost:8080/api/leaves/employee/{employeeId}/balance/{leaveType} - Get leave balance
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('http://localhost:8080/api/dashboard/summary');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('totalEmployees').textContent = data.totalActiveEmployees || 0;
+                    document.getElementById('todayAttendance').textContent = data.todayAttendance || 0;
+                    document.getElementById('pendingLeaves').textContent = data.pendingLeaves || 0;
+                    document.getElementById('monthlyPayrolls').textContent = data.currentMonthPayrolls || 0;
+                }
+            } catch (error) {
+                console.log('Dashboard stats not available yet. Services may be starting up.');
+            }
+        }
+
+        // Test API endpoints
+        async function testAPI(endpoint, method = 'GET') {
+            try {
+                const response = await fetch(`http://localhost:8080${endpoint}`, { method });
+                const data = await response.json();
+                alert(`API Response: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                alert(`API Error: ${error.message}. Make sure the services are running.`);
+            }
+        }
+
+        // Quick actions
+        function showAddEmployee() {
+            const employee = {
+                employeeId: "EMP" + Date.now(),
+                fullName: prompt("Enter employee name:") || "John Doe",
+                email: prompt("Enter email:") || "john@example.com",
+                phone: "1234567890",
+                department: prompt("Enter department:") || "IT",
+                position: prompt("Enter position:") || "Developer",
+                baseSalary: parseFloat(prompt("Enter base salary:") || "50000"),
+                allowances: 5000,
+                employmentType: "FULL_TIME",
+                status: "ACTIVE"
+            };
+
+            fetch('http://localhost:8080/api/employees', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(employee)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Employee created successfully!');
+                loadDashboardStats();
+            })
+            .catch(error => alert('Error creating employee: ' + error.message));
+        }
+
+        function generatePayroll() {
+            const employeeId = prompt("Enter Employee ID:") || "EMP001";
+            const payPeriod = prompt("Enter Pay Period (YYYY-MM):") || "2024-12";
+
+            fetch(`http://localhost:8080/api/payrolls/generate?employeeId=${employeeId}&payPeriod=${payPeriod}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Payroll generated successfully!');
+                loadDashboardStats();
+            })
+            .catch(error => alert('Error generating payroll: ' + error.message));
+        }
+
+        function checkIn() {
+            const employeeId = prompt("Enter Employee ID:") || "EMP001";
+
+            fetch(`http://localhost:8080/api/attendance/checkin?employeeId=${employeeId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Check-in successful!');
+                loadDashboardStats();
+            })
+            .catch(error => alert('Error during check-in: ' + error.message));
+        }
+
+        function applyLeave() {
+            const leave = {
+                employeeId: prompt("Enter Employee ID:") || "EMP001",
+                leaveType: prompt("Enter leave type (ANNUAL/SICK/CASUAL):") || "ANNUAL",
+                startDate: prompt("Enter start date (YYYY-MM-DD):") || "2024-12-20",
+                endDate: prompt("Enter end date (YYYY-MM-DD):") || "2024-12-22",
+                reason: prompt("Enter reason:") || "Personal work",
+                totalDays: 3
+            };
+
+            fetch('http://localhost:8080/api/leaves/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(leave)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Leave application submitted successfully!');
+                loadDashboardStats();
+            })
+            .catch(error => alert('Error applying leave: ' + error.message));
+        }
+
+        // Load stats on page load
+        loadDashboardStats();
+
+        // Refresh stats every 30 seconds
+        setInterval(loadDashboardStats, 30000);
+    </script>
+</body>
+</html>

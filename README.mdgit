@@ -1,0 +1,1 @@
+"# EMS-v1"  initgit add . git commit -m "first commit"git branch -M maingit remote add origin https://github.com/Amrit1604/EMS-v1.gitgit push -u origin main
