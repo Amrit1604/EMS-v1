@@ -1,0 +1,60 @@
+# --- Node / frontend ---
+node_modules/
+frontend/node_modules/
+employee-payroll-frontend/node_modules/
+**/node_modules/
+
+# --- Java / Maven ---
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# --- Spring Boot ---
+spring-boot-app.jar
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.iml
+
+# --- Logs ---
+*.log
+logs/
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Environment ---
+.env
+*.env
+
+# --- Database ---
+*.db
+
+# --- Others ---
+.gradle/
+.settings/
+*.swp
+
+# --- Temporary ---
+tmp/
+temp/
+
+# --- JetBrains ---
+out/
+
+# --- Eclipse ---
+.project
+.classpath
+
+# --- Windows ---
+ehthumbs.db
+Desktop.ini
+
+# Optionally ignore lockfiles during development
+# package-lock.json
+# yarn.lock

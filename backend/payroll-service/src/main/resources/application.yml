@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: payroll-service
+  
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+  
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: employeedb
+      auto-index-creation: true
+  
+  security:
+    jwt:
+      secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      expiration: 86400000
+
+server:
+  port: 8082
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
