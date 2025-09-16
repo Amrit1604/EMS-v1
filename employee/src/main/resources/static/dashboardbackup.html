@@ -1,0 +1,641 @@
+<!-- <!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    h2 { margin-top: 30px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+    th { background: #0077cc; color: white; }
+    button { padding: 6px 12px; margin: 2px; cursor: pointer; border: none; border-radius: 4px; }
+    .add-btn { background: #28a745; color: white; }
+    .edit-btn { background: #ffc107; color: black; }
+    .delete-btn { background: #dc3545; color: white; }
+    .logout-btn { background: #444; color: white; float: right; }
+  </style>
+</head>
+<body>
+  <h1>Admin Dashboard 
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </h1>
+
+  <h2>Departments</h2>
+  <button class="add-btn" onclick="addDepartment()">+ Add Department</button>
+  <table id="departmentsTable">
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Actions</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Employees</h2>
+  <button class="add-btn" onclick="addEmployee()">+ Add Employee</button>
+  <table id="employeesTable">
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Email</th><th>Joining Date</th><th>Department</th><th>Actions</th><th>Payroll</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Payroll Modal -->
+  <div id="payrollModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+background:white; padding:20px; border:2px solid #0077cc; border-radius:8px; max-width:500px; z-index:1000;">
+    <h3>Payroll Details</h3>
+    <div id="payrollContent"></div>
+    <button onclick="closePayrollModal()">Close</button>
+  </div>
+  <div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.5); z-index:999;"></div>
+
+  <!-- Edit Employee Modal -->
+  <div id="editEmployeeModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+background:white; padding:20px; border:2px solid #0077cc; border-radius:8px; max-width:400px; z-index:1000;">
+    <h3>Edit Employee</h3>
+    <form id="editEmployeeForm">
+      <input type="hidden" id="editEmpId">
+      <label>Name:</label><br>
+      <input type="text" id="editEmpName" required><br><br>
+      <label>Email:</label><br>
+      <input type="email" id="editEmpEmail" required><br><br>
+      <label>Joining Date:</label><br>
+      <input type="date" id="editEmpJoiningDate" required><br><br>
+      <label>Department ID:</label><br>
+      <input type="number" id="editEmpDepartmentId" required><br><br>
+      <button type="submit" class="edit-btn">Save</button>
+      <button type="button" onclick="closeEditEmployeeModal()">Cancel</button>
+    </form>
+  </div>
+  <div id="modalOverlayEdit" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.5); z-index:999;"></div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "index.html";
+
+    const API_BASE = "http://localhost:8081/api";
+    const PAYROLL_API = "http://localhost:8082/api";
+
+    let employeesCache = [];
+
+    // ------------------ Load Departments ------------------
+    async function loadDepartments() {
+      const res = await fetch(`${API_BASE}/departments`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const data = await res.json();
+      const tbody = document.querySelector("#departmentsTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(d => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${d.id}</td>
+            <td>${d.name}</td>
+            <td>
+              <button class="delete-btn" onclick="deleteDepartment(${d.id})">Delete</button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    async function addDepartment() {
+      const name = prompt("Enter department name:");
+      if (!name) return;
+      await fetch(`${API_BASE}/departments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ name })
+      });
+      loadDepartments();
+    }
+
+    async function deleteDepartment(id) {
+      if (!confirm("Delete this department?")) return;
+      await fetch(`${API_BASE}/departments/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      loadDepartments();
+    }
+
+    // ------------------ Load Employees ------------------
+    async function loadEmployees() {
+      const res = await fetch(`${API_BASE}/employees`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const data = await res.json();
+      employeesCache = data; // cache for editing
+      const tbody = document.querySelector("#employeesTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(e => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${e.id}</td>
+            <td>${e.name}</td>
+            <td>${e.email}</td>
+            <td>${e.joiningDate}</td>
+            <td>${e.department ? e.department.name : "-"}</td>
+            <td>
+              <button class="edit-btn" onclick="editEmployee(${e.id})">Edit</button>
+              <button class="delete-btn" onclick="deleteEmployee(${e.id})">Delete</button>
+            </td>
+            <td>
+              <button class="edit-btn" onclick="viewPayroll(${e.id})">View Payroll</button>
+              <button class="add-btn" onclick="generatePayrollPrompt(${e.id})">Generate</button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    async function addEmployee() {
+      const name = prompt("Enter employee name:");
+      const email = prompt("Enter employee email:");
+      const joiningDate = prompt("Enter joining date (YYYY-MM-DD):");
+      const departmentId = prompt("Enter department ID:");
+      if (!name || !email || !joiningDate || !departmentId) return;
+      await fetch(`${API_BASE}/employees`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          name, email, joiningDate, department: { id: departmentId }
+        })
+      });
+      loadEmployees();
+    }
+
+    async function deleteEmployee(id) {
+      if (!confirm("Delete this employee?")) return;
+      await fetch(`${API_BASE}/employees/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      loadEmployees();
+    }
+
+    // ------------------ Edit Employee ------------------
+    function editEmployee(empId) {
+      const employee = employeesCache.find(e => e.id === empId);
+      if (!employee) return;
+      document.getElementById("editEmpId").value = employee.id;
+      document.getElementById("editEmpName").value = employee.name;
+      document.getElementById("editEmpEmail").value = employee.email;
+      document.getElementById("editEmpJoiningDate").value = employee.joiningDate;
+      document.getElementById("editEmpDepartmentId").value = employee.department ? employee.department.id : '';
+      document.getElementById('editEmployeeModal').style.display = 'block';
+      document.getElementById('modalOverlayEdit').style.display = 'block';
+    }
+
+    function closeEditEmployeeModal() {
+      document.getElementById('editEmployeeModal').style.display = 'none';
+      document.getElementById('modalOverlayEdit').style.display = 'none';
+    }
+
+    document.getElementById("editEmployeeForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const id = document.getElementById("editEmpId").value;
+      const name = document.getElementById("editEmpName").value;
+      const email = document.getElementById("editEmpEmail").value;
+      const joiningDate = document.getElementById("editEmpJoiningDate").value;
+      const departmentId = document.getElementById("editEmpDepartmentId").value;
+      const res = await fetch(`${API_BASE}/employees/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          name, email, joiningDate, department: { id: departmentId }
+        })
+      });
+      if (res.ok) {
+        alert("Employee updated!");
+        closeEditEmployeeModal();
+        loadEmployees();
+      } else {
+        alert("Error updating employee");
+      }
+    });
+
+    // ------------------ Payroll ------------------
+    async function viewPayroll(empId) {
+      const res = await fetch(`${PAYROLL_API}/payroll/${empId}`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const payrollData = await res.json();
+      if (payrollData.length === 0) {
+        showPayrollModal('<p>No payroll records found.</p>');
+        return;
+      }
+      let html = '<table style="width:100%; border-collapse: collapse;"><tr><th>Month</th><th>Total Salary</th><th>Breakdown</th></tr>';
+      payrollData.forEach(p => {
+        let breakdown = "{}";
+        try {
+          const obj = JSON.parse(p.salaryBreakdown);
+          breakdown = Object.entries(obj).map(([k,v]) => `${k}: ${v}`).join("<br>");
+        } catch(e){}
+        html += `<tr>
+          <td>${p.month}</td>
+          <td>${p.totalSalary}</td>
+          <td>${breakdown}</td>
+        </tr>`;
+      });
+      html += '</table>';
+      showPayrollModal(html);
+    }
+
+    async function generatePayrollPrompt(empId) {
+      const month = prompt("Enter month (YYYY-MM)");
+      if (!month) return;
+      const res = await fetch(`${PAYROLL_API}/payroll/generate/${empId}?month=${month}`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const payroll = await res.json();
+      alert(`Payroll generated for ${month}!\nTotal: ${payroll.totalSalary}`);
+    }
+
+    function showPayrollModal(contentHtml) {
+      document.getElementById('payrollContent').innerHTML = contentHtml;
+      document.getElementById('payrollModal').style.display = 'block';
+      document.getElementById('modalOverlay').style.display = 'block';
+    }
+
+    function closePayrollModal() {
+      document.getElementById('payrollModal').style.display = 'none';
+      document.getElementById('modalOverlay').style.display = 'none';
+    }
+
+    // ------------------ Logout ------------------
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "index.html";
+    }
+
+    // ------------------ Initialize ------------------
+    loadDepartments();
+    loadEmployees();
+  </script>
+</body>
+</html>  
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    h2 { margin-top: 30px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+    th { background: #0077cc; color: white; }
+    button { padding: 6px 12px; margin: 2px; cursor: pointer; border: none; border-radius: 4px; }
+    .add-btn { background: #28a745; color: white; }
+    .edit-btn { background: #ffc107; color: black; }
+    .delete-btn { background: #dc3545; color: white; }
+    .logout-btn { background: #444; color: white; float: right; }
+  </style>
+</head>
+<body>
+  <h1>Admin Dashboard 
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </h1>
+
+  <h2>Departments</h2>
+  <button class="add-btn" onclick="addDepartment()">+ Add Department</button>
+  <table id="departmentsTable">
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Actions</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Employees</h2>
+  <button class="add-btn" onclick="addEmployee()">+ Add Employee</button>
+  <table id="employeesTable">
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Email</th><th>Joining Date</th><th>Department</th><th>Actions</th><th>Payroll</th><th>Salary</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Payroll Modal -->
+  <div id="payrollModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+background:white; padding:20px; border:2px solid #0077cc; border-radius:8px; max-width:500px; z-index:1000;">
+    <h3>Payroll Details</h3>
+    <div id="payrollContent"></div>
+    <button onclick="closePayrollModal()">Close</button>
+  </div>
+  <div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.5); z-index:999;"></div>
+
+  <!-- Edit Employee Modal -->
+  <div id="editEmployeeModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+background:white; padding:20px; border:2px solid #0077cc; border-radius:8px; max-width:400px; z-index:1000;">
+    <h3>Edit Employee</h3>
+    <form id="editEmployeeForm">
+      <input type="hidden" id="editEmpId">
+      <label>Name:</label><br>
+      <input type="text" id="editEmpName" required><br><br>
+      <label>Email:</label><br>
+      <input type="email" id="editEmpEmail" required><br><br>
+      <label>Joining Date:</label><br>
+      <input type="date" id="editEmpJoiningDate" required><br><br>
+      <label>Department ID:</label><br>
+      <input type="number" id="editEmpDepartmentId" required><br><br>
+      <button type="submit" class="edit-btn">Save</button>
+      <button type="button" onclick="closeEditEmployeeModal()">Cancel</button>
+    </form>
+  </div>
+  <div id="modalOverlayEdit" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.5); z-index:999;"></div>
+
+  <!-- Salary Components Modal -->
+  <div id="salaryModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+background:white; padding:20px; border:2px solid #0077cc; border-radius:8px; max-width:500px; z-index:1000;">
+    <h3>Salary Components</h3>
+    <div id="salaryContent"></div>
+    <button onclick="closeSalaryModal()">Close</button>
+  </div>
+  <div id="modalOverlaySalary" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.5); z-index:999;"></div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "index.html";
+
+    const API_BASE = "http://localhost:8081/api";
+    const PAYROLL_API = "http://localhost:8082/api";
+
+    let employeesCache = [];
+
+    // ------------------ Load Departments ------------------
+    async function loadDepartments() {
+      const res = await fetch(`${API_BASE}/departments`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const data = await res.json();
+      const tbody = document.querySelector("#departmentsTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(d => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${d.id}</td>
+            <td>${d.name}</td>
+            <td>
+              <button class="delete-btn" onclick="deleteDepartment(${d.id})">Delete</button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    async function addDepartment() {
+      const name = prompt("Enter department name:");
+      if (!name) return;
+      await fetch(`${API_BASE}/departments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ name })
+      });
+      loadDepartments();
+    }
+
+    async function deleteDepartment(id) {
+      if (!confirm("Delete this department?")) return;
+      await fetch(`${API_BASE}/departments/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      loadDepartments();
+    }
+
+    // ------------------ Load Employees ------------------
+    async function loadEmployees() {
+      const res = await fetch(`${API_BASE}/employees`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const data = await res.json();
+      employeesCache = data; // cache for editing
+      const tbody = document.querySelector("#employeesTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(e => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${e.id}</td>
+            <td>${e.name}</td>
+            <td>${e.email}</td>
+            <td>${e.joiningDate}</td>
+            <td>${e.department ? e.department.name : "-"}</td>
+            <td>
+              <button class="edit-btn" onclick="editEmployee(${e.id})">Edit</button>
+              <button class="delete-btn" onclick="deleteEmployee(${e.id})">Delete</button>
+            </td>
+            <td>
+              <button class="edit-btn" onclick="viewPayroll(${e.id})">View Payroll</button>
+              <button class="add-btn" onclick="generatePayrollPrompt(${e.id})">Generate</button>
+            </td>
+            <td>
+              <button class="edit-btn" onclick="manageSalary(${e.id})">Manage Salary</button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    async function addEmployee() {
+      const name = prompt("Enter employee name:");
+      const email = prompt("Enter employee email:");
+      const joiningDate = prompt("Enter joining date (YYYY-MM-DD):");
+      const departmentId = prompt("Enter department ID:");
+      if (!name || !email || !joiningDate || !departmentId) return;
+      await fetch(`${API_BASE}/employees`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          name, email, joiningDate, department: { id: departmentId }
+        })
+      });
+      loadEmployees();
+    }
+
+    async function deleteEmployee(id) {
+      if (!confirm("Delete this employee?")) return;
+      await fetch(`${API_BASE}/employees/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      loadEmployees();
+    }
+
+    // ------------------ Edit Employee ------------------
+    function editEmployee(empId) {
+      const employee = employeesCache.find(e => e.id === empId);
+      if (!employee) return;
+      document.getElementById("editEmpId").value = employee.id;
+      document.getElementById("editEmpName").value = employee.name;
+      document.getElementById("editEmpEmail").value = employee.email;
+      document.getElementById("editEmpJoiningDate").value = employee.joiningDate;
+      document.getElementById("editEmpDepartmentId").value = employee.department ? employee.department.id : '';
+      document.getElementById('editEmployeeModal').style.display = 'block';
+      document.getElementById('modalOverlayEdit').style.display = 'block';
+    }
+
+    function closeEditEmployeeModal() {
+      document.getElementById('editEmployeeModal').style.display = 'none';
+      document.getElementById('modalOverlayEdit').style.display = 'none';
+    }
+
+    document.getElementById("editEmployeeForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const id = document.getElementById("editEmpId").value;
+      const name = document.getElementById("editEmpName").value;
+      const email = document.getElementById("editEmpEmail").value;
+      const joiningDate = document.getElementById("editEmpJoiningDate").value;
+      const departmentId = document.getElementById("editEmpDepartmentId").value;
+      const res = await fetch(`${API_BASE}/employees/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          name, email, joiningDate, department: { id: departmentId }
+        })
+      });
+      if (res.ok) {
+        alert("Employee updated!");
+        closeEditEmployeeModal();
+        loadEmployees();
+      } else {
+        alert("Error updating employee");
+      }
+    });
+
+    // ------------------ Payroll ------------------
+    async function viewPayroll(empId) {
+      const res = await fetch(`${PAYROLL_API}/payroll/${empId}`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const payrollData = await res.json();
+      if (payrollData.length === 0) {
+        showPayrollModal('<p>No payroll records found.</p>');
+        return;
+      }
+      let html = '<table style="width:100%; border-collapse: collapse;"><tr><th>Month</th><th>Total Salary</th><th>Breakdown</th></tr>';
+      payrollData.forEach(p => {
+        let breakdown = "{}";
+        try {
+          const obj = JSON.parse(p.salaryBreakdown);
+          breakdown = Object.entries(obj).map(([k,v]) => `${k}: ${v}`).join("<br>");
+        } catch(e){}
+        html += `<tr>
+          <td>${p.month}</td>
+          <td>${p.totalSalary}</td>
+          <td>${breakdown}</td>
+        </tr>`;
+      });
+      html += '</table>';
+      showPayrollModal(html);
+    }
+
+    async function generatePayrollPrompt(empId) {
+      const month = prompt("Enter month (YYYY-MM)");
+      if (!month) return;
+      const res = await fetch(`${PAYROLL_API}/payroll/generate/${empId}?month=${month}`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const payroll = await res.json();
+      alert(`Payroll generated for ${month}!\nTotal: ${payroll.totalSalary}`);
+    }
+
+    function showPayrollModal(contentHtml) {
+      document.getElementById('payrollContent').innerHTML = contentHtml;
+      document.getElementById('payrollModal').style.display = 'block';
+      document.getElementById('modalOverlay').style.display = 'block';
+    }
+
+    function closePayrollModal() {
+      document.getElementById('payrollModal').style.display = 'none';
+      document.getElementById('modalOverlay').style.display = 'none';
+    }
+
+    // ------------------ Salary Components ------------------
+    async function manageSalary(empId) {
+      const res = await fetch(`${PAYROLL_API}/employees/${empId}/salary-components`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      const components = await res.json();
+
+      let html = `<table style="width:100%; border-collapse:collapse;">
+                    <tr><th>Name</th><th>Amount</th><th>Actions</th></tr>`;
+      components.forEach(c => {
+        html += `<tr>
+          <td>${c.salaryComponent.name}</td>
+          <td>${c.amount}</td>
+          <td>
+            <button onclick="editComponent(${c.id}, ${empId})">Edit</button>
+            <button onclick="deleteComponent(${c.id}, ${empId})">Delete</button>
+          </td>
+        </tr>`;
+      });
+      html += `</table>
+               <button onclick="addComponent(${empId})">+ Add Component</button>`;
+
+      document.getElementById('salaryContent').innerHTML = html;
+      document.getElementById('salaryModal').style.display = 'block';
+      document.getElementById('modalOverlaySalary').style.display = 'block';
+    }
+
+    function closeSalaryModal() {
+      document.getElementById('salaryModal').style.display = 'none';
+      document.getElementById('modalOverlaySalary').style.display = 'none';
+    }
+
+    async function addComponent(empId) {
+      const name = prompt("Enter component name:");
+      const amount = prompt("Enter amount:");
+      if (!name || !amount) return;
+      await fetch(`${PAYROLL_API}/employees/${empId}/salary-components`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({ salaryComponent: { name }, amount: parseFloat(amount) })
+      });
+      manageSalary(empId);
+    }
+
+    async function deleteComponent(compId, empId) {
+      if (!confirm("Delete this component?")) return;
+      await fetch(`${PAYROLL_API}/employees/salary-components/${compId}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      manageSalary(empId);
+    }
+
+    // ------------------ Logout ------------------
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "index.html";
+    }
+
+    // ------------------ Initialize ------------------
+    loadDepartments();
+    loadEmployees();
+  </script>
+</body>
+</html>

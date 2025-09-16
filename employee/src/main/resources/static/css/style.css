@@ -1,0 +1,20 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; line-height: 1.6; }
+
+/* Dashboard Layout */
+.dashboard-container { display: flex; min-height: 100vh; }
+.sidebar { width: 250px; background-color: #f8f9fa; padding: 20px; border-right: 1px solid #ddd; }
+.sidebar ul { list-style: none; }
+.sidebar ul li a { display: block; padding: 10px; color: #333; text-decoration: none; }
+.content { flex: 1; padding: 20px; }
+.hidden { display: none; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+button { padding: 6px 12px; margin: 2px; cursor: pointer; }
+
+/* Modal */
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+         background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; }
+.modal-content { background: white; padding: 20px; border-radius: 5px; min-width: 300px; }

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+    :root {
+      --primary-color: #ffffff;
+      --secondary-color: #e6eaf0;
+      --accent-color: #004080; /* A deep, rich royal blue */
+      --text-color: #2c3e50;
+      --input-bg: #f9f9f9;
+      --border-color: #d1d5db;
+      --box-shadow-color: rgba(0, 0, 0, 0.2);
+      --options-text-color: #64748b;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--secondary-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated Particle Background Styling */
+    #particles-js {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-color: #001f4d; /* A darker shade of blue */
+      z-index: -1;
+    }
+
+    .login-box {
+      background: var(--primary-color);
+      padding: 50px;
+      border-radius: 20px;
+      width: 380px;
+      text-align: center;
+      box-shadow: 0 15px 50px var(--box-shadow-color);
+      border: 1px solid var(--border-color);
+      animation: fadeIn 1s ease-in-out;
+      transform: translateY(0);
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      margin-bottom: 35px;
+      font-size: 2.8em;
+      color: var(--accent-color);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 50px;
+      border: 2px solid var(--border-color);
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 1.05em;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #94a3b8;
+      transition: all 0.3s ease;
+    }
+
+    input:focus::placeholder {
+        color: var(--text-color);
+    }
+
+    input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 18px rgba(0, 64, 128, 0.2);
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .show-password {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        cursor: pointer;
+        font-size: 0.9em;
+        user-select: none;
+        transition: color 0.3s ease;
+    }
+
+    .show-password:hover {
+        color: var(--text-color);
+    }
+
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      font-size: 0.9em;
+      color: var(--options-text-color);
+    }
+
+    .checkbox-container {
+      display: block;
+      position: relative;
+      padding-left: 25px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .checkmark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 18px;
+      width: 18px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .checkbox-container:hover input ~ .checkmark {
+      background-color: #e0e0e0;
+    }
+
+    .checkbox-container input:checked ~ .checkmark {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    .checkmark:after {
+      content: "";
+      position: absolute;
+      display: none;
+    }
+
+    .checkbox-container input:checked ~ .checkmark:after {
+      display: block;
+    }
+
+    .checkmark:after {
+      left: 6px;
+      top: 2px;
+      width: 5px;
+      height: 10px;
+      border: solid var(--primary-color);
+      border-width: 0 3px 3px 0;
+      transform: rotate(45deg);
+    }
+
+    .forgot-password {
+      color: var(--options-text-color);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .forgot-password:hover {
+      color: var(--accent-color);
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent-color);
+      color: var(--primary-color);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 1.25em;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      background: #002d5c;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .error {
+      color: #e74c3c;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9em;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .error.show {
+        opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="particles-js"></div>
+  <div class="login-box">
+    <h2>Login</h2>
+    <div class="input-group">
+      <input type="text" id="username" placeholder="Username" required>
+    </div>
+    <div class="input-group password-wrapper">
+      <input type="password" id="password" placeholder="Password" required>
+      <span class="show-password" onclick="togglePassword()">Show</span>
+    </div>
+    <div class="options">
+      <label class="checkbox-container">Remember Me
+        <input type="checkbox" id="rememberMe">
+        <span class="checkmark"></span>
+      </label>
+      <a href="#" class="forgot-password">Forgot Password?</a>
+    </div>
+    <button onclick="login()">Login</button>
+    <p id="error" class="error"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script>
+    // Initialize particles.js
+    particlesJS('particles-js', {
+      "particles": {
+        "number": {
+          "value": 80,
+          "density": {
+            "enable": true,
+            "value_area": 800
+          }
+        },
+        "color": {
+          "value": "#ffffff" /* White particles */
+        },
+        "shape": {
+          "type": "circle",
+          "stroke": {
+            "width": 0,
+            "color": "#000000"
+          },
+          "polygon": {
+            "nb_sides": 5
+          }
+        },
+        "opacity": {
+          "value": 0.5,
+          "random": false,
+          "anim": {
+            "enable": false,
+            "speed": 1,
+            "opacity_min": 0.1,
+            "sync": false
+          }
+        },
+        "size": {
+          "value": 3,
+          "random": true,
+          "anim": {
+            "enable": false,
+            "speed": 40,
+            "size_min": 0.1,
+            "sync": false
+          }
+        },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#ffffff", /* White lines connecting particles */
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 3,
+          "direction": "none",
+          "random": false,
+          "straight": false,
+          "out_mode": "out",
+          "bounce": false,
+          "attract": {
+            "enable": false,
+            "rotateX": 600,
+            "rotateY": 1200
+          }
+        }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": {
+            "enable": true,
+            "mode": "grab"
+          },
+          "onclick": {
+            "enable": true,
+            "mode": "push"
+          },
+          "resize": true
+        },
+        "modes": {
+          "grab": {
+            "distance": 140,
+            "line_linked": {
+              "opacity": 1
+            }
+          },
+          "bubble": {
+            "distance": 400,
+            "size": 40,
+            "duration": 2,
+            "opacity": 8,
+            "speed": 3
+          },
+          "repulse": {
+            "distance": 200,
+            "duration": 0.4
+          },
+          "push": {
+            "particles_nb": 4
+          },
+          "remove": {
+            "particles_nb": 2
+          }
+        }
+      },
+      "retina_detect": true
+    });
+
+    // Existing login and togglePassword functions
+    async function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const error = document.getElementById("error");
+
+      try {
+        const response = await fetch("http://localhost:8080/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (!response.ok) {
+          throw new Error("Invalid login");
+        }
+
+        const data = await response.json();
+        localStorage.setItem("token", data.token);
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        error.textContent = "Login failed! Please check your credentials.";
+        error.classList.add("show");
+        setTimeout(() => {
+            error.classList.remove("show");
+        }, 3000);
+      }
+    }
+
+    function togglePassword() {
+        const passwordField = document.getElementById("password");
+        const toggleBtn = document.querySelector(".show-password");
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            toggleBtn.textContent = "Hide";
+        } else {
+            passwordField.type = "password";
+            toggleBtn.textContent = "Show";
+        }
+    }
+  </script>
+</body>
+</html>
